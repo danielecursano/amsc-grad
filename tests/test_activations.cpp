@@ -16,20 +16,29 @@ int main() {
             true
     );
 
-    auto y = relu(x);
+    {
+        auto y = relu(x);
 
-    y->backward();
+        y->backward();
 
-    assert(approx(y->data[0], 1.0));
-    assert(approx(y->data[1], 0.0));
-    assert(approx(y->data[2], 3.0));
-    assert(approx(y->data[3], 4.0));
+        assert(approx(y->data[0], 1.0));
+        assert(approx(y->data[1], 0.0));
+        assert(approx(y->data[2], 3.0));
+        assert(approx(y->data[3], 4.0));
 
-    assert(approx(x->grad[0], 1.0));
-    assert(approx(x->grad[1], 0.0));
-    assert(approx(x->grad[2], 1.0));
-    assert(approx(x->grad[3], 1.0));
+        assert(approx(x->grad[0], 1.0));
+        assert(approx(x->grad[1], 0.0));
+        assert(approx(x->grad[2], 1.0));
+        assert(approx(x->grad[3], 1.0));
 
-    std::cout << "Relu test passed" << std::endl;
+        std::cout << "Relu test passed" << std::endl;
+    }
+
+    {
+        x->zero_grad();
+        auto y = tanh(x);
+        y->backward();
+        
+    }
 
 }

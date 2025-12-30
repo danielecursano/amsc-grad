@@ -71,5 +71,17 @@ int main() {
 
     }
 
+    {
+        auto x = std::make_shared<Tensor<double>>(
+                Tensor<double>::Shape{5},
+                std::vector<double>{1.0, 1.0, 2.0, 3.0, 5.0},
+                true
+        );
+
+        auto y = mean(x);
+        y->backward();
+        assert(approx(y->data[0], (12. / 5.)));
+    }
+
     std::cout << "All tests passed!\n";
 }

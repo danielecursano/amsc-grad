@@ -31,11 +31,11 @@ int main() {
 
     float lr = 0.1f;
 
-    auto optim = Adam<float>({AdamVariable(w, true), AdamVariable(b, false)}, lr, 0.1, 0.1, 0.1, 0.1);
-    //auto optim = SGD({w, b}, lr);
+    //auto optim = Adam<float>({AdamVariable(w, true), AdamVariable(b, true)}, lr, 0.1, 0.1, 0.1, 0.1);
+    auto optim = SGD({w, b}, lr);
 
     auto model = [w, b](auto input) {
-        return relu(matmul(input, w)+b);
+        return relu(matmul(input, w));
     };
 
     auto loss_fn = [](auto pred, auto target) {
@@ -48,9 +48,11 @@ int main() {
 
         // Mean squared error: (pred - target)^2
         auto loss = loss_fn(pred, target);
-        T loss_val = 0.0;
-        for (auto v : loss->data) loss_val += v;
-        loss_val /= 4.0f; // batch size
+
+        auto loss_val = mean(loss);
+        //T loss_val = 0.0;
+        //for (auto v : loss->data) loss_val += v;
+        //loss_val /= 4.0f; // batch size
 
         // Backward
         loss->backward();
@@ -59,11 +61,11 @@ int main() {
         optim.zero_grad();
 
         if (epoch % 10 == 0)
-            std::cout << "Epoch " << epoch << " loss: " << loss_val << std::endl;
+            std::cout << "Epoch " << epoch << " loss: " << loss_val->data[0] << std::endl;
     }
 
     // --- Prediction ---
-    auto pred = matmul(input, w) + b;
+    auto pred = matmul(input, w) ;
     std::cout << "Predictions:\n";
     for (auto v : pred->data) std::cout << v << " ";
     std::cout << std::endl;
