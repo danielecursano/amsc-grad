@@ -33,7 +33,7 @@ public:
     void step() override
     {
         step_count++;
-        T step_size = this->lr * std::sqrt(1 - std::pow(beta2, step_count) / (1 - std::pow(beta1, step_count)));
+        T step_size = this->lr * std::sqrt((1 - std::pow(beta2, step_count))) / (1 - std::pow(beta1, step_count));
         for (auto &p: this->params) {
             for (size_t i = 0; i < p.size(); ++i) {
                 T grad = (p.tensor->grad)[i];
