@@ -8,5 +8,6 @@
 #include "utils/debug.hpp"
 #include "utils/tensor_utils.hpp"
 #include "optim/optim.hpp"
+#include "optim/adam.hpp"
 
 #endif

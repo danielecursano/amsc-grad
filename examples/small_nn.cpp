@@ -31,7 +31,8 @@ int main() {
 
     float lr = 0.1f;
 
-    auto optim = SGD({w, b}, lr);
+    auto optim = Adam<float>({AdamVariable(w, true), AdamVariable(b, false)}, lr, 0.1, 0.1, 0.1, 0.1);
+    //auto optim = SGD({w, b}, lr);
 
     auto model = [w, b](auto input) {
         return relu(matmul(input, w)+b);

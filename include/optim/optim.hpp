@@ -9,26 +9,20 @@
 template <Numeric T>
 class Optimizer {
 public:
-    Optimizer(const std::vector<TensorS<T>> &params)
-        : params(params) {}
 
     virtual ~Optimizer() = default;
 
     virtual void step() = 0;
 
-    virtual void zero_grad() {
-        for (auto& p : params) p->zero_grad();
-    }
+    virtual void zero_grad() = 0;
 
-protected:
-    std::vector<TensorS<T>> params;
 };
 
 template <Numeric T>
 class SGD : public Optimizer<T> {
 public:
     SGD(const std::vector<TensorS<T>> &params, T learning_rate) 
-    : Optimizer<T>(params), lr(learning_rate) {}
+    : params(params), lr(learning_rate) {}
 
     void step() override 
     {
@@ -38,7 +32,15 @@ public:
         }
     }
 
+    void zero_grad() override
+    {
+        for (auto &p: this->params) {
+            p->zero_grad();
+        }
+    }
+
 private:
+    std::vector<TensorS<T>> params;
     T lr;
 };
 
