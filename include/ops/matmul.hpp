@@ -90,7 +90,7 @@ TensorS<T> matmul(TensorS<T> A, TensorS<T> B)
     raw_matmul(A->data, B->data, out_data, m, n, p);
 
     auto out = std::make_shared<Tensor<T>>(
-            typename Tensor<T>::Shape(m, p),
+            typename Tensor<T>::Shape{m, p},
             out_data,
             A->requires_grad || B->requires_grad,
             std::vector<TensorS<T>>{A, B},

@@ -30,7 +30,7 @@ template<Numeric T> using TensorS = std::shared_ptr<Tensor<T>>;
  */
 template<Numeric T>
 struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
-    using Shape = std::vector<int>; // using integers to then implement -1 as a placeholder ?
+    using Shape = std::vector<size_t>; // using integers to then implement -1 as a placeholder ?
 
     std::vector<T> data, grad, hess;
     Shape shape;
@@ -45,7 +45,7 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
     Tensor(
             Shape shape, 
             std::vector<T> data, 
-            bool requires_grad = true, 
+            bool requires_grad = false,
             std::vector<std::shared_ptr<Tensor<T>>> parents = {}, 
             std::string metadata = ""
         ) : shape(std::move(shape)), 

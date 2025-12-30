@@ -6,6 +6,7 @@
 #include "ops/activations.hpp"
 #include "ops/matmul.hpp"
 #include "utils/debug.hpp"
+#include "utils/tensor_utils.hpp"
 #include "optim/optim.hpp"
 
 #endif
