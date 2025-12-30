@@ -8,27 +8,47 @@
 template <Numeric T>
 TensorS<T> operator+(TensorS<T> a, TensorS<T> b)
 {
-    if (a->shape != b->shape) throw std::runtime_error("Tensors shapes do not match");
-    std::vector<T> out_data(a->data.size());
+    if (a->shape[1] != b->shape[1])
+        throw std::runtime_error("Tensors shapes do not match in feature dimension");
 
-    for (size_t i = 0; i < a->data.size(); ++i) out_data[i] = a->data[i] + b->data[i];
+    size_t batch_a = a->shape[0];
+    size_t batch_b = b->shape[0];
+    size_t feature_size = a->shape[1];
+
+    size_t batch_size = std::max(batch_a, batch_b);
+
+    std::vector<T> out_data(batch_size * feature_size);
+
+    for (size_t i = 0; i < batch_size; ++i) {
+        const T* a_row = &a->data[(i % batch_a) * feature_size];
+        const T* b_row = &b->data[(i % batch_b) * feature_size];
+        T* out_row = &out_data[i * feature_size];
+        for (size_t j = 0; j < feature_size; ++j) {
+            out_row[j] = a_row[j] + b_row[j];
+        }
+    }
+
+    std::vector<size_t> out_shape = {batch_size, feature_size};
 
     auto out = std::make_shared<Tensor<T>>(
-        a->shape,
-        out_data,
-        a->requires_grad || b->requires_grad,
-        std::vector<TensorS<T>>{a, b},
-        "AddBackward"
+            out_shape,
+            std::move(out_data),
+            a->requires_grad || b->requires_grad,
+            std::vector<TensorS<T>>{a, b},
+            "AddBackward"
     );
 
-    out->grad_fn = [a, b, out]() {
-        if (a->requires_grad) {
-            std::transform(a->grad.begin(), a->grad.end(), out->grad.begin(), a->grad.begin(), [](T x, T y) { return x+y; });
-            std::transform(a->hess.begin(), a->hess.end(), out->hess.begin(), a->hess.begin(), [](T x, T y) { return x+y; });
-        }
-        if (b->requires_grad) {
-            std::transform(b->grad.begin(), b->grad.end(), out->grad.begin(), b->grad.begin(), [](T x, T y) { return x+y; });
-            std::transform(b->hess.begin(), b->hess.end(), out->hess.begin(), b->hess.begin(), [](T x, T y) { return x+y; });
+    out->grad_fn = [a, b, out, batch_a, batch_b, feature_size]() {
+        for (size_t i = 0; i < out->grad.size() / feature_size; ++i) {
+            size_t ia = i % batch_a;
+            size_t ib = i % batch_b;
+            for (size_t j = 0; j < feature_size; ++j) {
+                if (a->requires_grad) a->grad[ia * feature_size + j] += out->grad[i * feature_size + j];
+                if (b->requires_grad) b->grad[ib * feature_size + j] += out->grad[i * feature_size + j];
+
+                if (a->requires_grad) a->hess[ia * feature_size + j] += out->hess[i * feature_size + j];
+                if (b->requires_grad) b->hess[ib * feature_size + j] += out->hess[i * feature_size + j];
+            }
         }
     };
 
