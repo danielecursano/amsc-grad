@@ -74,47 +74,49 @@ std::vector<T> transpose(const std::vector<T>& mat, size_t rows, size_t cols)
     return result;
 }
 
-template <Numeric T>
-TensorS<T> matmul(TensorS<T> A, TensorS<T> B)
-{
-    if (A->shape.size() != 2 || B->shape.size() != 2)
-        throw std::runtime_error("matmul only supports 2D tensors");
+namespace tensor::ops {
 
-    size_t m = A->shape[0];
-    size_t n = A->shape[1];
-    size_t p = B->shape[1];
+    template<Numeric T>
+    TensorS<T> matmul(TensorS<T> A, TensorS<T> B) {
+        if (A->shape.size() != 2 || B->shape.size() != 2)
+            throw std::runtime_error("matmul only supports 2D tensors");
 
-    if (n != B->shape[0])
-        throw std::runtime_error("matmul shapes do not align");
+        size_t m = A->shape[0];
+        size_t n = A->shape[1];
+        size_t p = B->shape[1];
 
-    std::vector<T> out_data(m * p, 0.0);
-    raw_matmul(A->data, B->data, out_data, m, n, p);
+        if (n != B->shape[0])
+            throw std::runtime_error("matmul shapes do not align");
 
-    auto out = std::make_shared<Tensor<T>>(
-            typename Tensor<T>::Shape{m, p},
-            out_data,
-            A->requires_grad || B->requires_grad,
-            std::vector<TensorS<T>>{A, B},
-            "MatMulBackward"
-    );
+        std::vector<T> out_data(m * p, 0.0);
+        raw_matmul(A->data, B->data, out_data, m, n, p);
 
-    out->grad_fn = [A, B, out, m, n, p]() {
-        if (A->requires_grad) {
-            auto BT = transpose(B->data, n, p);
-            raw_matmul(out->grad, BT, A->grad, m, p, n, T(1));
-            for (auto &x: BT) x *= x;
-            raw_matmul(out->hess, BT, A->hess, m, p, n, T(1));
-        }
+        auto out = std::make_shared<Tensor<T>>(
+                typename Tensor<T>::Shape{m, p},
+                out_data,
+                A->requires_grad || B->requires_grad,
+                std::vector<TensorS<T>>{A, B},
+                "MatMulBackward"
+        );
 
-        if (B->requires_grad) {
-            auto AT = transpose(A->data, m, n);
-            raw_matmul(AT, out->grad, B->grad, n, m, p, T(1));
-            for (auto &x: AT) x *= x;
-            raw_matmul(AT, out->hess, B->hess, n, m, p, T(1));
-        }
-    };
+        out->grad_fn = [A, B, out, m, n, p]() {
+            if (A->requires_grad) {
+                auto BT = transpose(B->data, n, p);
+                raw_matmul(out->grad, BT, A->grad, m, p, n, T(1));
+                for (auto &x: BT) x *= x;
+                raw_matmul(out->hess, BT, A->hess, m, p, n, T(1));
+            }
 
-    return out;
+            if (B->requires_grad) {
+                auto AT = transpose(A->data, m, n);
+                raw_matmul(AT, out->grad, B->grad, n, m, p, T(1));
+                for (auto &x: AT) x *= x;
+                raw_matmul(AT, out->hess, B->hess, n, m, p, T(1));
+            }
+        };
+
+        return out;
+    }
 }
 
 #endif

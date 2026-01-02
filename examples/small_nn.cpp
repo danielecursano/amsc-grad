@@ -5,7 +5,8 @@
 
 int main() {
     using T = float;
-
+    using namespace tensor::ops;
+    using namespace tensor::optim;
     // --- Dataset ---
     // 2 features, 4 examples
     std::vector<std::vector<T>> X_data = {
@@ -26,8 +27,8 @@ int main() {
     auto target = std::make_shared<Tensor<T>>(Tensor<T>::Shape{4, 1}, y_data);
 
     // --- Parameters ---
-    auto w = normal<T>({2, 1}, 0.0f, 1.0f, true);
-    auto b = zeros<T>({1, 1}, true);
+    auto w = tensor::normal<T>({2, 1}, 0.0f, 1.0f, true);
+    auto b = tensor::zeros<T>({1, 1}, true);
 
     float lr = 0.01f;
 
