@@ -6,6 +6,13 @@
 
 namespace tensor::ops {
 
+    /**
+     * @brief Applies the ReLU activation function on the input tensor.
+     *
+     * @tparam T Numeric type (float/double)
+     * @param a Input tensor
+     * @return ReLU-activated tensor
+     */
     template<Numeric T>
     TensorS<T> relu(TensorS<T> a) {
         std::vector<T> out_data(a->data.size());
@@ -32,6 +39,13 @@ namespace tensor::ops {
         return out;
     }
 
+    /**
+     * @brief Applies the hyperbolic tangent activation function on the input tensor.
+     *
+     * @tparam T
+     * @param a Input tensor
+     * @return Output tensor
+     */
     template<Numeric T>
     TensorS<T> tanh(TensorS<T> a) {
         std::vector<T> out_data(a->data.size());

@@ -1,0 +1,14 @@
+# Neural network parameters
+epochs = 1000
+learning_rate = 0.0002
+hidden_size = 20
+input_dim = 2
+output_dim = 1
+
+# PDE/Boundary weights
+lambda_pde = 1.0
+lambda_boundary = 10.0
+
+# Training data
+N_collocation = 400
+N_boundaries = 120

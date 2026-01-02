@@ -6,9 +6,20 @@
 
 namespace tensor::optim {
 
+    /**
+     * @brief Data structure to store a tensor and its optimizer state for Adam.
+     *
+     * Stores the first moment (m), second moment (v), and whether weight decay
+     * should be applied for a given parameter tensor.
+     *
+     * @tparam T Numeric type
+     */
     template<Numeric T>
     struct AdamVariable {
 
+        /**
+         * @return the number of elements in the parameter tensor.
+         */
         size_t size() {
             return m.size();
         }
@@ -19,11 +30,30 @@ namespace tensor::optim {
                 m(tensor->data.size(), T(0)),
                 v(tensor->data.size(), T(0)) {}
 
+        /// Tensor being optimized
         TensorS<T> tensor;
-        std::vector<T> m, v;
+
+        /// First moment vector
+        std::vector<T> m;
+
+        ///Second moment vector
+        std::vector<T> v;
+
+        /// Wheter to apply weight decay
         bool decay;
     };
 
+    /**
+     * @brief Adam optimizer.
+     *
+     * Implements the Adam optimization algorithm.
+     *
+     * References:
+     * \link https://en.wikipedia.org/wiki/Stochastic_gradient_descent#Adam
+     * \link https://arxiv.org/abs/1412.6980
+     *
+     * @tparam T
+     */
     template<Numeric T>
     class Adam : public Optimizer<T> {
     public:
@@ -52,8 +82,25 @@ namespace tensor::optim {
         }
 
     private:
+        /// Parameters being optimized
         std::vector<AdamVariable<T>> params;
-        T lr, beta1, beta2, eps, weight_decay;
+
+        /// Learning rate
+        T lr;
+
+        /// First moment decay
+        T beta1;
+
+        /// Second moment decay
+        T beta2;
+
+        /// Small epsilon to prevent division by zero
+        T eps;
+
+        /// Weight decay
+        T weight_decay;
+
+        /// Step counter
         int step_count = 0;
     };
 

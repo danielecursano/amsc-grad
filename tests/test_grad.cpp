@@ -8,7 +8,8 @@ bool approx(double a, double b, double eps = 1e-6) {
 }
 
 int main() {
-
+    using namespace tensor;
+    using namespace tensor::ops;
     {
         auto x = std::make_shared<Tensor<double>>(
                 Tensor<double>::Shape{1},
@@ -81,7 +82,6 @@ int main() {
         auto y = mean(x);
         y->backward();
         assert(approx(y->data[0], (12. / 5.)));
-        std::cout << *x;
     }
 
     {

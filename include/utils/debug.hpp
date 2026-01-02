@@ -9,6 +9,15 @@
 
 #include "core/tensor_core.hpp"
 
+/**
+ * @brief Writes a representation of a tensor to an output stream.
+ *
+ * The representation includes the shape of the tensor and its gradient function.
+ *
+ * @param os Output stream
+ * @param t Input tensor
+ * @return Reference to the output stream os
+ */
 template <Numeric T>
 std::ostream& operator<<(std::ostream& os, const Tensor<T>& t) 
 {
@@ -21,6 +30,12 @@ std::ostream& operator<<(std::ostream& os, const Tensor<T>& t)
     return os;
 }
 
+/**
+ * Writes the computation graph of the backpropagation path to a Graphviz .dot file.
+ *
+ * @tparam T
+ * @param graph Vector of shared pointers to tensors representating the nodes of the graph
+ */
 template <Numeric T>
 void print_graph(const std::vector<TensorS<T>>& graph)
 {

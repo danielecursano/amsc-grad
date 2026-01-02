@@ -7,6 +7,19 @@
 
 namespace tensor::ops {
 
+        /**
+         * @brief Computes the element-wise sum of two tensors with the same shape.
+         *
+         * @tparam T Numeric type
+         * @param a First input tensor
+         * @param b Second input tensor
+         * @return A tensor containing the element-wise sum of a and b
+         *
+         * @note As for every operation implemented in this library, the returned tensor
+         * may be connected to the computational graph and linked to a gradient
+         * function to propagate gradients and Hessians to its parent nodes.
+         * @throws std::runtime_error if the shapes of a and b do not match
+         */
         template <Numeric T>
         TensorS<T> operator+(TensorS<T> a, TensorS<T> b)
         {
@@ -41,6 +54,14 @@ namespace tensor::ops {
             return out;
         }
 
+        /**
+         * @brief Computes the product between a scalar and a tensor.
+         *
+         * @tparam T Numeric type
+         * @param a Input tensor
+         * @param scalar Input scalar value
+         * @return Output tensor
+         */
         template <Numeric T>
         TensorS<T> operator*(TensorS<T> a, T scalar)
         {
@@ -67,12 +88,23 @@ namespace tensor::ops {
             return out;
         }
 
+        /**
+         * @brief Computes the product of a scalar and a tensor.
+         */
         template <Numeric T>
         TensorS<T> operator*(T scalar, TensorS<T> a)
         {
             return a * scalar;
         }
 
+        /**
+         * @brief Computes the element-wise product of two tensors.
+         *
+         * @tparam T Numeric type
+         * @param a Input tensor
+         * @param b Second input tensor
+         * @return Output tensor
+         */
         template<Numeric T>
         TensorS<T> operator*(TensorS<T> a, TensorS<T> b)
         {
@@ -107,6 +139,14 @@ namespace tensor::ops {
             return out;
         }
 
+        /**
+         * Computes the element-wise power of a tensor.
+         *
+         * @tparam T Numeric type
+         * @param a Input tensor
+         * @param exp Exponent to which each element is raised
+         * @return A tensor containing a raised element-wise to exp
+         */
         template <Numeric T>
         TensorS<T> pow(TensorS<T> a, int exp)
         {
@@ -134,6 +174,13 @@ namespace tensor::ops {
             return out;
         }
 
+        /**
+         * Computes the sum of all elements in a tensor.
+         *
+         * @tparam T Numeric type
+         * @param a Input tensor
+         * @return A scalar tensor containing the sum of all elements of a
+         */
         template <Numeric T>
         TensorS<T> sum(TensorS<T> a) {
             std::vector<T> out_data(1);
@@ -158,11 +205,26 @@ namespace tensor::ops {
             return out;
         }
 
+        /**
+         * Computes the mean of the elements in a tensor.
+         *
+         * @tparam T Numeric type
+         * @param a Input tensor
+         * @return A scalar tensor containing the mean
+         */
         template <Numeric T>
         TensorS<T> mean(TensorS<T> a) {
             return sum(a) * static_cast<T>(1. / static_cast<T>(a->data.size()));
         }
 
+        /**
+         * Computes the element-wise sum of two tensors with broadcasting.
+         *
+         * @tparam T Numeric type
+         * @param a Input tensor
+         * @param b Second input tensor of shape (1, K)
+         * @return Output tensor
+         */
         template <Numeric T>
         TensorS<T> broadcast_add(TensorS<T> a, TensorS<T> b)
         {

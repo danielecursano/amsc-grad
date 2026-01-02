@@ -45,6 +45,24 @@ void raw_matmul(const std::vector<T> &a, const std::vector<T> &b, std::vector<T>
 }
 #else
 #warning "BLAS DISABLED"
+
+/**
+ * @brief Performs a matrix multiplication of two matrices stored in flat vectors.
+ *
+ * The multiplication is performed in O(m * n * p) time.
+ *
+ * @tparam T Numeric type (e.g., float, double)
+ * @param a Input matrix A (size m * n)
+ * @param b Input matrix B (size n * p)
+ * @param c Output matrix C (size m * p). The result is added to \p beta * C
+ * @param m Number of rows of matrix A
+ * @param n Number of columns of matrix A (and rows of B)
+ * @param p Number of columns of matrix B
+ * @param beta Optional scalar multiplier for the existing values in C (default = 0)
+ *
+ * @note This function operates on raw std::vector data and does not create Tensor objects.
+ *       It is intended for internal use when BLAS is not available.
+ */
 template<Numeric T>
 void raw_matmul(const std::vector<T> &a, const std::vector<T> &b, std::vector<T> &c, size_t m, size_t n, size_t p, T beta = 0.0)
 {
@@ -60,6 +78,15 @@ void raw_matmul(const std::vector<T> &a, const std::vector<T> &b, std::vector<T>
 }
 #endif
 
+/**
+ * Computes the transpose of a matrix stored in a flat vector.
+ *
+ * @tparam T Numeric type (e.g., float, double)
+ * @param mat Input matrix stored as a flat vector
+ * @param rows Number of rows in the input matrix
+ * @param cols Number of columns in the input matrix
+ * @return A std::vector containing the transposed matrix
+ */
 template <typename T>
 std::vector<T> transpose(const std::vector<T>& mat, size_t rows, size_t cols)
 {
@@ -76,6 +103,14 @@ std::vector<T> transpose(const std::vector<T>& mat, size_t rows, size_t cols)
 
 namespace tensor::ops {
 
+    /**
+     * Computes a matrix multiplication of two tensors.
+     *
+     * @tparam T Numeric type
+     * @param A First input tensor
+     * @param B Second input tensor
+     * @return Output tensor
+     */
     template<Numeric T>
     TensorS<T> matmul(TensorS<T> A, TensorS<T> B) {
         if (A->shape.size() != 2 || B->shape.size() != 2)

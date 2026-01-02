@@ -8,18 +8,45 @@
 
 namespace tensor::optim {
 
+    /**
+     * @brief Abstract base class for optimizers.
+     *
+     * This class defines the interface for all optimization algorithms.
+     * Optimizers are used for updating parameters of tensors based on
+     * their gradients during training.
+     *
+     * @tparam T Numeric type of the paramteres
+     */
     template<Numeric T>
     class Optimizer {
     public:
 
         virtual ~Optimizer() = default;
 
+        /**
+         * @brief Performs a single optimization step.
+         *
+         * Derived class implement this function to update parameters
+         * according to their specific optimization algorithms.
+         */
         virtual void step() = 0;
 
+        /**
+         * Resets gradients of all parameters to zero.
+         */
         virtual void zero_grad() = 0;
 
     };
 
+    /**
+     * @brief Stochastic Gradient Descent (SGD) optimizer.
+     *
+     * Updates parameters using the standard gradient descent rule.
+     *
+     * Reference:
+     * \link https://en.wikipedia.org/wiki/Stochastic_gradient_descent
+     *
+     */
     template<Numeric T>
     class SGD : public Optimizer<T> {
     public:
@@ -40,7 +67,10 @@ namespace tensor::optim {
         }
 
     private:
+        /// Vector of parameters to optimize
         std::vector<TensorS<T>> params;
+
+        /// Learning rate
         T lr;
     };
 

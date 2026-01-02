@@ -8,6 +8,7 @@ bool approx(double a, double b, double tol = 1e-6) {
 }
 
 int main() {
+    using namespace tensor::ops;
     using T = float;
 
     auto x = std::make_shared<Tensor<T>>(
