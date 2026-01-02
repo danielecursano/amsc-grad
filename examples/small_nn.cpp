@@ -29,30 +29,25 @@ int main() {
     auto w = normal<T>({2, 1}, 0.0f, 1.0f, true);
     auto b = zeros<T>({1, 1}, true);
 
-    float lr = 0.1f;
+    float lr = 0.01f;
 
-    //auto optim = Adam<float>({AdamVariable(w, true), AdamVariable(b, true)}, lr, 0.1, 0.1, 0.1, 0.1);
-    auto optim = SGD({w, b}, lr);
+    auto optim = Adam<float>({AdamVariable(w, true), AdamVariable(b, true)}, lr, 0.9, 0.999, 1e-8, 0.0);
+    //auto optim = SGD({w, b}, lr);
 
     auto model = [w, b](auto input) {
-        return relu(matmul(input, w));
+        return (broadcast_add(matmul(input, w), b));
     };
 
     auto loss_fn = [](auto pred, auto target) {
-        return pow(pred + (-1.0f* target), 2);
+        return mean(pow(pred + (-1.0f* target), 2));
     };
 
     // --- Training loop ---
-    for (int epoch = 0; epoch < 100; ++epoch) {
+    for (int epoch = 0; epoch < 1000; ++epoch) {
         auto pred = model(input);
 
         // Mean squared error: (pred - target)^2
         auto loss = loss_fn(pred, target);
-
-        auto loss_val = mean(loss);
-        //T loss_val = 0.0;
-        //for (auto v : loss->data) loss_val += v;
-        //loss_val /= 4.0f; // batch size
 
         // Backward
         loss->backward();
@@ -60,12 +55,12 @@ int main() {
         optim.step();
         optim.zero_grad();
 
-        if (epoch % 10 == 0)
-            std::cout << "Epoch " << epoch << " loss: " << loss_val->data[0] << std::endl;
+        if (epoch % 100 == 0)
+            std::cout << "Epoch " << epoch << " loss: " << loss->data[0] << std::endl;
     }
 
     // --- Prediction ---
-    auto pred = matmul(input, w) ;
+    auto pred = model(input);
     std::cout << "Predictions:\n";
     for (auto v : pred->data) std::cout << v << " ";
     std::cout << std::endl;

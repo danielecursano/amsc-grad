@@ -4,7 +4,7 @@
 #include "core/tensor_core.hpp"
 #include <memory>
 
-#ifdef BLAS
+#ifdef USE_BLAS
     #include <cblas.h>
     #define BLAS 1
 #else
@@ -44,6 +44,7 @@ void raw_matmul(const std::vector<T> &a, const std::vector<T> &b, std::vector<T>
     }
 }
 #else
+#warning "BLAS DISABLED"
 template<Numeric T>
 void raw_matmul(const std::vector<T> &a, const std::vector<T> &b, std::vector<T> &c, size_t m, size_t n, size_t p, T beta = 0.0)
 {
@@ -101,14 +102,14 @@ TensorS<T> matmul(TensorS<T> A, TensorS<T> B)
         if (A->requires_grad) {
             auto BT = transpose(B->data, n, p);
             raw_matmul(out->grad, BT, A->grad, m, p, n, T(1));
-            for(auto &x : BT) x *= x;
+            for (auto &x: BT) x *= x;
             raw_matmul(out->hess, BT, A->hess, m, p, n, T(1));
         }
 
         if (B->requires_grad) {
             auto AT = transpose(A->data, m, n);
             raw_matmul(AT, out->grad, B->grad, n, m, p, T(1));
-            for(auto &x : AT) x *= x;
+            for (auto &x: AT) x *= x;
             raw_matmul(AT, out->hess, B->hess, n, m, p, T(1));
         }
     };

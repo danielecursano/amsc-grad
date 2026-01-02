@@ -25,7 +25,7 @@ template<Numeric T> using TensorS = std::shared_ptr<Tensor<T>>;
  * This class represents a node in the computational graph. It stores
  * the forward-pass data, the accumulated gradient, a function pointer to the backward
  * function to propagate gradients from the loss to the input layers during backpropagation.
- * 
+ *
  * @tparam T the numeric type (e.g., float, double)
  */
 template<Numeric T>
@@ -43,15 +43,15 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
     std::string metadata = "";
 
     Tensor(
-            Shape shape, 
-            std::vector<T> data, 
+            Shape shape,
+            std::vector<T> data,
             bool requires_grad = false,
-            std::vector<std::shared_ptr<Tensor<T>>> parents = {}, 
+            std::vector<std::shared_ptr<Tensor<T>>> parents = {},
             std::string metadata = ""
-        ) : shape(std::move(shape)), 
+        ) : shape(std::move(shape)),
             requires_grad(requires_grad),
             data(std::move(data)),
-            prev(std::move(parents)), 
+            prev(std::move(parents)),
             metadata(metadata),
             grad(requires_grad ? this->data.size() : 0),
             hess(requires_grad ? this->data.size() : 0)
@@ -60,7 +60,7 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
             for (auto dim: shape) total_size *= (dim > 0 ? dim : 1);
             if (this->data.empty()) this->data.assign(total_size, T(0));
          }
-        
+
     void backward()
     {
         std::vector<TensorS<T>> graph;
@@ -83,14 +83,14 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
 
         #if TENSOR_DEBUG
         print_graph(graph);
-        #endif 
+        #endif
 
         for (auto it = graph.rbegin(); it != graph.rend(); ++it) {
             (*it)->grad_fn();
         }
     }
 
-    void zero_grad() 
+    void zero_grad()
     {
         std::fill(this->grad.begin(), this->grad.end(), T(0));
         std::fill(this->hess.begin(), this->hess.end(), T(0));

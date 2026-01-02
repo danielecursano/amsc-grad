@@ -75,7 +75,7 @@ TensorS<T> operator*(TensorS<T> a, TensorS<T> b)
 
     auto out = std::make_shared<Tensor<T>>(
         a->shape,
-        std::move(out_data),
+        out_data,
         a->requires_grad || b->requires_grad,
         std::vector<TensorS<T>>{a, b},
         "MulBackward"
@@ -106,7 +106,7 @@ TensorS<T> pow(TensorS<T> a, int exp)
     std::transform(a->data.begin(), a->data.end(), out_data.begin(), [exp](T x) { return std::pow(x, exp); });
     auto out = std::make_shared<Tensor<T>>(
             a->shape,
-            std::move(out_data),
+            out_data,
             a->requires_grad,
             std::vector<TensorS<T>>{a},
             "PowBackward"
@@ -133,14 +133,14 @@ TensorS<T> sum(TensorS<T> a) {
 
     auto out = std::make_shared<Tensor<T>>(
             typename Tensor<T>::Shape{1},
-            std::move(out_data),
+            out_data,
             a->requires_grad,
             std::vector<TensorS<T>>{a},
             "SumBackward"
     );
 
     out->grad_fn = [a, out]() {
-        if (a->requires_grad) return;
+        if (!a->requires_grad) return;
         for (size_t i = 0; i < a->data.size(); ++i) {
             a->grad[i] += out->grad[0];
             a->hess[i] += out->hess[0];
@@ -153,6 +153,51 @@ TensorS<T> sum(TensorS<T> a) {
 template <Numeric T>
 TensorS<T> mean(TensorS<T> a) {
     return sum(a) * static_cast<T>(1. / static_cast<T>(a->data.size()));
+}
+
+template <Numeric T>
+TensorS<T> broadcast_add(TensorS<T> a, TensorS<T> b)
+{
+    if (b->shape[0] != 1 || b->shape[1] != a->shape[1]) {
+        throw std::runtime_error("broadcast_add expects b to have shape (1, K)");
+    }
+
+    size_t N = a->shape[0];
+    size_t K = a->shape[1];
+
+    std::vector<T> out_data(N * K);
+    for (size_t i = 0; i < N; ++i) {
+        for (size_t j = 0; j < K; ++j) {
+            out_data[i * K + j] = a->data[i * K + j] + b->data[j];
+        }
+    }
+
+    auto out = std::make_shared<Tensor<T>>(
+            typename Tensor<T>::Shape{N, K},
+            out_data,
+            a->requires_grad || b->requires_grad,
+            std::vector<TensorS<T>>{a, b},
+            "BroadcastAddBackward"
+    );
+
+    out->grad_fn = [a, b, out, N, K]() {
+        if (a->requires_grad) {
+            for (size_t i = 0; i < N * K; ++i) {
+                a->grad[i] += out->grad[i];
+                a->hess[i] += out->hess[i];
+            }
+        }
+        if (b->requires_grad) {
+            for (size_t i = 0; i < N; ++i) {
+                for (size_t j = 0; j < K; ++j) {
+                    b->grad[j] += out->grad[i * K + j];
+                    b->hess[j] += out->hess[i * K + j];
+                }
+            }
+        }
+    };
+
+    return out;
 }
 
 #endif

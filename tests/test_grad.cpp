@@ -81,6 +81,25 @@ int main() {
         auto y = mean(x);
         y->backward();
         assert(approx(y->data[0], (12. / 5.)));
+        std::cout << *x;
+    }
+
+    {
+        // example from the slides of NAML at PoliMi
+        // v = -2x1 + 3x2 + 0.5
+        // h = tanh v
+        // y = 2 * h - 1
+        auto x1 = zeros<float>({1}, true);
+        auto x2 = ones<float>({1}, true);
+        auto c1 = zeros<float>({1});
+        auto c2 = zeros<float>({1});
+        c1->data[0] = 0.5;
+        x1->data[0] = 2.f;
+        c2->data[0] = -1.f;
+        auto v = -2.f * x1 + 3.f * x2 + c1;
+        auto h = tanh(v);
+        auto y = 2.f * h + c2;
+        y->backward();
     }
 
     std::cout << "All tests passed!\n";

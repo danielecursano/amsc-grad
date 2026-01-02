@@ -28,7 +28,7 @@ template <Numeric T>
 class Adam : public Optimizer<T> {
 public:
     Adam(const std::vector<AdamVariable<T>> &params, T learning_rate, T beta1, T beta2, T eps, T weight_decay)
-    : params(params), lr(learning_rate), beta1(beta1), beta2(beta2), eps(eps), weight_decay(weight_decay) {}
+    : params(params), lr(learning_rate), beta1(beta1), beta2(beta2), eps(eps), weight_decay(weight_decay), step_count(0) {}
 
     void step() override
     {
@@ -40,7 +40,7 @@ public:
                 if (p.decay) grad += weight_decay * (p.tensor->data)[i];
                 p.m[i] = beta1 * p.m[i] + (1.0 - beta1) * grad;
                 p.v[i] = beta2 * p.v[i] + (1.0 - beta2) * grad * grad;
-                (p.tensor->data)[i] -= step_size * p.m[i] / (sqrt(p.v[i]) + eps);
+                (p.tensor->data)[i] -= step_size * p.m[i] / (std::sqrt(p.v[i]) + eps);
             }
         }
     }
@@ -55,7 +55,7 @@ public:
 private:
     std::vector<AdamVariable<T>> params;
     T lr, beta1, beta2, eps, weight_decay;
-    int step_count;
+    int step_count = 0;
 };
 
 #endif

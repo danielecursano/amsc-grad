@@ -52,7 +52,7 @@ TensorS<T> tanh(TensorS<T> a)
                 T d2y = -2 * out->data[i] * dy;
 
                 a->grad[i] += out->grad[i] * dy;
-                a->hess[i] += out->hess[i] * dy * dy * out->grad[i] * d2y;
+                a->hess[i] += out->hess[i] * dy*dy + out->grad[i] * d2y;
             }
         }
     };
