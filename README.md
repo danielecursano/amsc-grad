@@ -59,8 +59,8 @@ $$
 
 $$
 \mathcal{L} =
-\lambda_{\text{pde}} \, \mathcal{L}_{\text{pde}} +
-\lambda_{\text{data}} \, \mathcal{L}_{\text{data}}
+\lambda_{\text{pde}} \ \mathcal{L}_{\text{pde}} +
+\lambda_{\text{data}} \ \mathcal{L}_{\text{data}}
 $$
 
 where:
