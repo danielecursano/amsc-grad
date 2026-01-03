@@ -33,8 +33,7 @@ Neural Network (PINN)** applied to a **2D Laplace problem**.
 
 ## Example Problem: 2D Laplace Equation
 
-In `src/main.cpp`, the code solves the Laplace equation on the domain  
-[-1, 1] × [-1, 1]:
+In `src/main.cpp`, the code solves the Laplace equation on the domain [-1, 1] × [-1, 1]:
 
 $$
 \nabla^2 u(x, y) = 0
@@ -55,13 +54,12 @@ $$
   - **5 hidden dense layers**
   - **20 neurons per layer**
   - **tanh** activation function
+
 - The network is trained to minimize the combined loss:
 
 $$
-\mathcal{L}
-=
-\lambda_{\text{pde}} \, \mathcal{L}_{\text{pde}}
-+
+\mathcal{L} =
+\lambda_{\text{pde}} \, \mathcal{L}_{\text{pde}} +
 \lambda_{\text{data}} \, \mathcal{L}_{\text{data}}
 $$
 
