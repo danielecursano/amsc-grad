@@ -96,6 +96,16 @@ g++ -std=c++23 -I include/ -lopenblas -DUSE_BLAS src/main.cpp -o pinn
 
 * `-DUSE_BLAS` enables the use of BLAS-backed `matmul`.
 
+### Running the PINN Example
+
+You can run the compiled program from the root of the repository:
+
+```bash
+./pinn [--epochs=<num_epochs>] [--lr=<learning_rate>] [--verbose]
+```
+
+Additional parameters can be set in the configuration file `pinn_config.dat`
+
 ### Optional Flags
 
 * `-DDEBUG`
