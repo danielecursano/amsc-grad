@@ -120,6 +120,13 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
         for (auto it = graph.rbegin(); it != graph.rend(); ++it) {
             (*it)->grad_fn();
         }
+
+        // Breaks links to parent nodes and clears grad_fn, freeing temporary nodes after backward.
+        for (auto &node: graph) {
+            node->prev.clear();
+            node->grad_fn = []() {};
+        }
+
     }
 
     /**
