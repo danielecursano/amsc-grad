@@ -113,7 +113,7 @@ Additional parameters can be set in the configuration file `pinn_config.dat`
   You can then visualize it using the provided script:
 
   ```bash
-  python scripts/render_graph.py graph.dot
+  python render_graph.py graph.dot
   ```
 
 ## References
