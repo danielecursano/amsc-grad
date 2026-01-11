@@ -39,7 +39,8 @@ int main() {
         x->zero_grad();
         auto y = tanh(x);
         y->backward();
-        
+        // NOTE: Missing assertions for tanh forward/backward.
+        // Fix: add expected values and check y->data / x->grad like the ReLU test.
     }
 
 }

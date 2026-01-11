@@ -9,3 +9,4 @@
 Overall, the code is well structured and implements a basic neural network training pipeline. However, there are several areas where improvements can be made, particularly in documentation, handling of data shuffling, and testing. Addressing these issues will enhance the usability and reliability of the code.
 
 In a more professional implementation I suggest to use an external library for automatic differentiation. However, I appreciate the effort of implementing it from scratch for learning purposes.
+

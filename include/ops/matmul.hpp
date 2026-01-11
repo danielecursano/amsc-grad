@@ -135,6 +135,8 @@ namespace tensor::ops {
         );
 
         out->grad_fn = [A, B, out, m, n, p]() {
+            // NOTE: Grad/Hess are accumulated into existing buffers (beta=1 in raw_matmul).
+            // Fix: ensure callers zero_grad() before backward() when reusing tensors.
             if (A->requires_grad) {
                 auto BT = transpose(B->data, n, p);
                 raw_matmul(out->grad, BT, A->grad, m, p, n, T(1));

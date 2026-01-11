@@ -84,6 +84,8 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
             size_t total_size = 1;
             for (auto dim: shape) total_size *= (dim > 0 ? dim : 1);
             if (this->data.empty()) this->data.assign(total_size, T(0));
+            // NOTE: If data starts empty, grad/hess were sized before auto-filling data.
+            // Fix: resize grad/hess after data is assigned (or size by total_size).
          }
 
 
@@ -109,6 +111,8 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
         build_graph(this->shared_from_this());
 
         if (this->requires_grad) {
+            // NOTE: This seeds every output element with grad=1, i.e., gradients of sum(outputs).
+            // Fix: accept an upstream gradient or require scalar outputs to avoid surprises.
             std::fill(this->grad.begin(), this->grad.end(), T(1));
             std::fill(this->hess.begin(), this->hess.end(), T(0));
         }
@@ -126,6 +130,8 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
             node->prev.clear();
             node->grad_fn = []() {};
         }
+        // NOTE: Clearing the graph prevents repeated backward() on the same forward pass.
+        // Fix: make graph cleanup optional if multiple backward passes are needed.
 
     }
 

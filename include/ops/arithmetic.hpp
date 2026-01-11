@@ -37,6 +37,8 @@ namespace tensor::ops {
             );
 
             out->grad_fn = [a, b, out]() {
+                // NOTE: Grad/Hess are accumulated into existing buffers.
+                // Fix: ensure callers zero_grad() between training steps.
                 if (a->requires_grad) {
                     std::transform(a->grad.begin(), a->grad.end(), out->grad.begin(), a->grad.begin(),
                                    [](T x, T y) { return x + y; });
@@ -231,6 +233,8 @@ namespace tensor::ops {
             if (b->shape[0] != 1 || b->shape[1] != a->shape[1]) {
                 throw std::runtime_error("broadcast_add expects b to have shape (1, K)");
             }
+            // NOTE: Assumes a is 2D; accessing a->shape[0/1] is unsafe otherwise.
+            // Fix: validate a->shape.size() == 2 (and maybe b->shape.size() == 2) here.
 
             size_t N = a->shape[0];
             size_t K = a->shape[1];
