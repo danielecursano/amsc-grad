@@ -21,6 +21,8 @@
  */
 int main(int argc, char* argv[]) {
     using T = float;
+    // NOTE: Hessians for PINNs can be numerically noisy in float.
+    // Fix: consider using double (or templating T) for more stable second derivatives.
     using namespace tensor::ops;
 
     GetPot parser("pinn_config.dat");
