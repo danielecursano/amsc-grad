@@ -20,6 +20,16 @@
 template<Numeric T> struct Tensor;
 template<Numeric T> using TensorS = std::shared_ptr<Tensor<T>>;
 
+struct TensorMetadata {
+    std::string name;
+    std::string grad_function_name;
+
+    TensorMetadata(std::string name, std::string grad_function_name) :
+    name(name),
+    grad_function_name(grad_function_name) {}
+
+};
+
 /**
  * @brief Multi dimensional container for data and automatic differentiation.
  *
@@ -31,8 +41,8 @@ template<Numeric T> using TensorS = std::shared_ptr<Tensor<T>>;
  */
 template<Numeric T>
 struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
-
-    using Shape = std::vector<size_t>;
+    using shape_type = size_t;
+    using Shape = std::vector<shape_type>;
 
     /// Data values
     std::vector<T> data;
@@ -56,7 +66,7 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
     std::function<void()> grad_fn = []() {};
 
     /// Optional metadata (e.g. operation name)
-    std::string metadata = "";
+    TensorMetadata metadata;
 
     /**
      * @brief Constructs a tensor.
@@ -65,21 +75,22 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
      * @param data Initial tensor data
      * @param requires_grad Whether gradients should be tracked
      * @param parents Parent tensors in the computational graph
-     * @param metadata Optional metadata string
+     * @param metadata Optional metadata strings
      */
     Tensor(
             Shape shape,
             std::vector<T> data,
             bool requires_grad = false,
             std::vector<std::shared_ptr<Tensor<T>>> parents = {},
-            std::string metadata = ""
+            std::string grad_function_name = "",
+            std::string name = ""
         ) : shape(std::move(shape)),
             requires_grad(requires_grad),
             data(std::move(data)),
             prev(std::move(parents)),
-            metadata(metadata),
             grad(requires_grad ? this->data.size() : 0),
-            hess(requires_grad ? this->data.size() : 0)
+            hess(requires_grad ? this->data.size() : 0),
+            metadata(name, grad_function_name)
          {
             size_t total_size = 1;
             for (auto dim: shape) total_size *= (dim > 0 ? dim : 1);
@@ -93,7 +104,7 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
      * Builds a topological ordering of the computation graph
      * and executes each node's gradient function in reverse order.
      */
-    void backward()
+    void backward(bool clean_graph = true)
     {
         std::vector<TensorS<T>> graph;
         std::unordered_set<Tensor<T>*> visited;
@@ -122,9 +133,11 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
         }
 
         // Breaks links to parent nodes and clears grad_fn, freeing temporary nodes after backward.
-        for (auto &node: graph) {
-            node->prev.clear();
-            node->grad_fn = []() {};
+        if (clean_graph) {
+            for (auto &node: graph) {
+                node->prev.clear();
+                node->grad_fn = []() {};
+            }
         }
 
     }
@@ -136,6 +149,60 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
     {
         std::fill(this->grad.begin(), this->grad.end(), T(0));
         std::fill(this->hess.begin(), this->hess.end(), T(0));
+    }
+
+    /**
+     * @brief Permutes the rows of a 2D tensor.
+     * 
+     * Reorderd the rows of the tensor inplace according to the 
+     * given permutation vector.
+     * 
+     * @param perm A permutation vector of size equal to the number of rows.
+     *             Each value must be a valid row index.
+     * 
+     */
+    void permute_rows(const std::vector<size_t>& perm)
+    {
+        if (shape.size() != 2)
+            throw std::runtime_error("permute_rows_ requires a 2D tensor");
+
+        const shape_type N = shape[0];
+        const shape_type M = shape[1];
+
+        std::vector<bool> visited(N, false);
+        std::vector<T> temp_row(M);
+
+        for (size_t i = 0; i < N; ++i) {
+            if (visited[i]) continue;
+
+            size_t current = i;
+            std::copy(
+                data.begin() + i * M,
+                data.begin() + (i + 1) * M,
+                temp_row.begin()
+            );
+
+            while (!visited[current]) {
+                visited[current] = true;
+                size_t next = perm[current];
+
+                if (next == i) {
+                    std::copy(
+                        temp_row.begin(),
+                        temp_row.end(),
+                        data.begin() + current * M
+                    );
+                } else {
+                    std::copy(
+                        data.begin() + next * M,
+                        data.begin() + (next + 1) * M,
+                        data.begin() + current * M
+                    );
+                }
+
+                current = next;
+            }
+        }
     }
 
 };

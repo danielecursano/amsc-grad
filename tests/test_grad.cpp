@@ -90,7 +90,9 @@ int main() {
         // h = tanh v
         // y = 2 * h - 1
         auto x1 = zeros<float>({1}, true);
+        x1->metadata.name = "x1";
         auto x2 = ones<float>({1}, true);
+        x2->metadata.name = "x2";
         auto c1 = zeros<float>({1});
         auto c2 = zeros<float>({1});
         c1->data[0] = 0.5;
@@ -99,6 +101,7 @@ int main() {
         auto v = -2.f * x1 + 3.f * x2 + c1;
         auto h = tanh(v);
         auto y = 2.f * h + c2;
+        y->metadata.name = "y";
         y->backward();
     }
 

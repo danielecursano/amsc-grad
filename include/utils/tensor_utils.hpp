@@ -100,6 +100,45 @@ namespace tensor {
         for (auto &x: data) x = dist(gen);
         return make_tensor<T>(shape, data, requires_grad);
     }
+
+    /**
+     * @brief Creates a identity square matrix.
+     */
+    template <typename T>
+    inline std::shared_ptr<Tensor<T>> 
+    eye(const typename Tensor<T>::Shape& shape, bool requires_grad = false) {
+        if (shape.size() != 2) throw std::runtime_error("eye() requires a 2D tensor shape");
+        if (shape[0] != shape[1]) throw std::runtime_error("Tensor must be a square matrix");
+        const auto n = shape[0];
+        std::vector<T> data(n*n, T(0));
+        for (auto i = 0; i < n; ++i) {
+            data[i*n + i] = T{1};
+        }
+        return make_tensor<T>(shape, data, requires_grad);
+    }
+
+    /**
+     * @brief Generate a random permutation of indices [0, n).
+     *
+     * Returns a vector containing a uniformly random permutation of the integers
+     * from 0 to n-1. The permutation is generated using the Fisher–Yates shuffle
+     * and the global random number generator.
+     *
+     * @param n Number of elements in the permutation.
+     * @return A vector of size n containing a random permutation of [0, n).
+     */
+    inline std::vector<size_t> random_perm(size_t n) {
+        std::vector<size_t> perm(n);
+        for (size_t i = 0; i < n; ++i) perm[i] = i;
+
+        auto& gen = global_rng();
+        for (size_t i = n - 1; i > 0; --i) {
+            std::uniform_int_distribution<size_t> dist(0, i);
+            std::swap(perm[i], perm[dist(gen)]);
+        }
+        return perm;
+    }
+
 }
 
 #endif

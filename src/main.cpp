@@ -20,7 +20,7 @@
  * 7. Generates a grid of points for validation and post-processing data for the python notebook.
  */
 int main(int argc, char* argv[]) {
-    using T = float;
+    using T = double;
     using namespace tensor::ops;
 
     GetPot parser("pinn_config.dat");
@@ -69,6 +69,7 @@ int main(int argc, char* argv[]) {
 
     size_t Nb_side = N_boundaries / 4;
     auto x_boundaries = tensor::uniform<T>({N_boundaries, 2}, -1.f, 1.f, false);
+    x_boundaries->metadata.name = "Boundary points";
 
     for (size_t i = 0; i < N_boundaries; ++i) {
         if (i < Nb_side) {
@@ -116,13 +117,13 @@ int main(int argc, char* argv[]) {
 
     // Lambda function to compute MSE loss
     auto mse_loss = [](auto pred, auto target) {
-        return mean(pow(pred + (-1.f)*target, 2));
+        return mean(pow(pred + (-1.)*target, 2));
     };
 
     // Adam parameters
     T beta1 = 0.9, beta2 = 0.999, eps = 1e-8, weight_decay = 1e-3;
 
-    auto optim = tensor::optim::Adam<float>({
+    auto optim = tensor::optim::Adam<T>({
                                      {W1, true},
                                      {W2, true},
                                      {B1, true},
@@ -147,6 +148,9 @@ int main(int argc, char* argv[]) {
         optim.zero_grad();
         x->zero_grad();
 
+        auto perm = tensor::random_perm(N_collocation);
+        x->permute_rows(perm);   // Permuting the rows of the train dataset
+
         // Forward pass: computes u'(x)
         auto pred = model(x);
         pred->backward();
@@ -157,13 +161,20 @@ int main(int argc, char* argv[]) {
             laplacian->data[i] = x->hess[i*2] + x->hess[i*2+1];
 
         auto pde_loss = mean(pow(laplacian, 2));
-
+        pde_loss->metadata.name = "pde_loss";
+        
         // Boundary loss
+        
+        auto perm_bound = tensor::random_perm(N_boundaries); // Permuting the rows of the train dataset
+        x_boundaries->permute_rows(perm_bound);
+        boundary_target->permute_rows(perm_bound);
+
         auto pred_bound = model(x_boundaries);
         auto boundary_loss = mse_loss(pred_bound, boundary_target);
 
         // Total loss
         auto total_loss = lambda_pde * pde_loss + lambda_boundary * boundary_loss;
+        total_loss->metadata.name = "Total loss";
 
         // Backpropagation and parameter update
         optim.zero_grad();

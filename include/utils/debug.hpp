@@ -26,7 +26,11 @@ std::ostream& operator<<(std::ostream& os, const Tensor<T>& t)
         os << t.shape[i];
         if (i+1 < t.shape.size()) os << ", ";
     }
-    os << "], grad_fn=<" << t.metadata << ">)" << std::endl;
+    os << "], grad_fn=<" << t.metadata.grad_function_name << ">";
+    if (t.metadata.name != "") {
+        os << ", name=<" << t.metadata.name << ">";
+    }
+    os << ")" << std::endl;
     return os;
 }
 
