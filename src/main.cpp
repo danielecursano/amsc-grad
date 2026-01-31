@@ -95,24 +95,15 @@ int main(int argc, char* argv[]) {
     }
 
     // Neural network
-    auto W1 = tensor::normal<T>({2, hidden_size}, 0., 0.1, true);
-    auto W2 = tensor::normal<T>({hidden_size, hidden_size}, 0., 0.1, true);
-    auto W3 = tensor::normal<T>({hidden_size, hidden_size}, 0., 0.1, true);
-    auto W4 = tensor::normal<T>({hidden_size, hidden_size}, 0., 0.1, true);
-    auto W5 = tensor::normal<T>({hidden_size, 1}, 0, 0.1, true);
-    auto B1 = tensor::zeros<T>({1, hidden_size}, true);
-    auto B2 = tensor::zeros<T>({1, hidden_size}, true);
-    auto B3 = tensor::zeros<T>({1, hidden_size}, true);
-    auto B4 = tensor::zeros<T>({1, hidden_size}, true);
-    auto B5 = tensor::zeros<T>({1, 1}, true);
+    auto linear1 = tensor::nn::Linear<T>(2, hidden_size, 0.1);
+    auto linear2 = tensor::nn::Linear<T>(hidden_size, hidden_size, 0.1);
+    auto linear3 = tensor::nn::Linear<T>(hidden_size, hidden_size, 0.1);
+    auto linear4 = tensor::nn::Linear<T>(hidden_size, hidden_size, 0.1);
+    auto linear5 = tensor::nn::Linear<T>(hidden_size, 1, 0.1);
 
     // Forward model
-    auto model = [&W1, &W2, &W3, &B1, &B2, &B3, &W4, &W5, &B4, &B5](auto x) {
-        auto h =  tanh(broadcast_add(matmul(x, W1), B1));
-        auto w =  tanh(broadcast_add(matmul(h, W2), B2));
-        auto z =  tanh(broadcast_add(matmul(w, W3), B3));
-        auto y =  tanh(broadcast_add(matmul(z, W4), B4));
-        return broadcast_add(matmul(y, W5), B5);
+    auto model = [&linear1, &linear2, &linear3, &linear4, &linear5](auto x) {
+        return linear5(tanh(linear4(tanh(linear3(tanh(linear2(tanh(linear1(x)))))))));
     };
 
     // Lambda function to compute MSE loss
@@ -124,17 +115,17 @@ int main(int argc, char* argv[]) {
     T beta1 = 0.9, beta2 = 0.999, eps = 1e-8, weight_decay = 1e-3;
 
     auto optim = tensor::optim::Adam<T>({
-                                     {W1, true},
-                                     {W2, true},
-                                     {B1, true},
-                                     {B2, true},
-                                     {W3, true},
-                                     {B3, true},
-                                     {W4, true},
-                                     {B4, true},
-                                     {W5, true},
-                                     {B5, true},
-                             }, lr, beta1, beta2, eps, weight_decay);
+            {linear1.getParams()[0], true},
+            {linear1.getParams()[1], true},
+            {linear2.getParams()[0], true},
+            {linear2.getParams()[1], true},
+            {linear3.getParams()[0], true},
+            {linear3.getParams()[1], true},
+            {linear4.getParams()[0], true},
+            {linear4.getParams()[1], true},
+            {linear5.getParams()[0], true},
+            {linear5.getParams()[1], true},
+    }, lr, beta1, beta2, eps, weight_decay);
 
     // File where to store the history of the training
     std::ofstream history("history.csv");

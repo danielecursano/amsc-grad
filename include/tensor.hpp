@@ -9,5 +9,6 @@
 #include "utils/tensor_utils.hpp"
 #include "optim/optim.hpp"
 #include "optim/adam.hpp"
+#include "nn/layers.hpp"
 
 #endif

@@ -232,6 +232,7 @@ namespace tensor::ops {
                 throw std::runtime_error("broadcast_add expects b to have shape (1, K)");
             }
 
+            if (a->shape.size() != 2) throw std::runtime_error("Tensor a must be a 2d tensor");
             size_t N = a->shape[0];
             size_t K = a->shape[1];
 

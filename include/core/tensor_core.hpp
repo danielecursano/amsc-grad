@@ -103,6 +103,9 @@ struct Tensor : public std::enable_shared_from_this<Tensor<T>> {
      *
      * Builds a topological ordering of the computation graph
      * and executes each node's gradient function in reverse order.
+     * 
+     * @param clean_graph if true it cleans the tensor's parents vector and 
+     *                    gradient function to free memory
      */
     void backward(bool clean_graph = true)
     {
