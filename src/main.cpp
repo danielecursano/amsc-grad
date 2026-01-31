@@ -3,6 +3,65 @@
 #include <cmath>
 #include "extra/GetPot.hpp"
 
+using namespace tensor::ops;
+
+/**
+ * @brief Simple feedforward neural network implementing the Model interface.
+ *
+ * This class demonstrates a standard fully connected feedforward network
+ * with multiple hidden layers and a single output. It follows the
+ * `tensor::nn::Model` interface, exposing a forward pass (`operator()`)
+ * and a method to access trainable parameters (`getParams()`).
+ *
+ * Key points for implementing custom models:
+ * - Always inherit from `tensor::nn::Model<T>`.
+ * - Implement the forward pass via `operator()(const TensorS<T>& input)`.
+ * - Expose all trainable parameters using `getParams()` so that optimizers
+ *   like Adam can access and update them automatically.
+ * - Maintain proper gradient tracking for all parameters.
+ *
+ * This class may be implemented in header files in the future.
+ *
+ **/
+template <Numeric T>
+struct FeedForwardNN : tensor::nn::Model<T> {
+
+    tensor::nn::Linear<T> linear1;
+    tensor::nn::Linear<T> linear2;
+    tensor::nn::Linear<T> linear3;
+    tensor::nn::Linear<T> linear4;
+    tensor::nn::Linear<T> linear5;
+
+    FeedForwardNN(Tensor<T>::shape_type hidden_size) 
+        : linear1(2, hidden_size, 0.1),
+          linear2(hidden_size, hidden_size, 0.1),
+          linear3(hidden_size, hidden_size, 0.1),
+          linear4(hidden_size, hidden_size, 0.1),
+          linear5(hidden_size, 1, 0.1)
+          {}
+
+    TensorS<T> operator()(const TensorS<T> &input) const override {
+        return linear5(tanh(linear4(tanh(linear3(tanh(linear2(tanh(linear1(input)))))))));
+    }
+
+    std::vector<TensorS<T>> getParams() const override {
+        std::vector<TensorS<T>> params;
+
+        auto append = [&](const std::vector<TensorS<T>>& p) {
+            params.insert(params.end(), p.begin(), p.end());
+        };
+
+        append(linear1.getParams());
+        append(linear2.getParams());
+        append(linear3.getParams());
+        append(linear4.getParams());
+        append(linear5.getParams());
+
+        return params;
+    }
+
+};
+
 /**
  * Demonstrates a physics-informed neural network to solve a 2d Laplace problem.
  *
@@ -21,7 +80,6 @@
  */
 int main(int argc, char* argv[]) {
     using T = double;
-    using namespace tensor::ops;
 
     GetPot parser("pinn_config.dat");
     GetPot cmd(argc, argv);
@@ -95,37 +153,16 @@ int main(int argc, char* argv[]) {
     }
 
     // Neural network
-    auto linear1 = tensor::nn::Linear<T>(2, hidden_size, 0.1);
-    auto linear2 = tensor::nn::Linear<T>(hidden_size, hidden_size, 0.1);
-    auto linear3 = tensor::nn::Linear<T>(hidden_size, hidden_size, 0.1);
-    auto linear4 = tensor::nn::Linear<T>(hidden_size, hidden_size, 0.1);
-    auto linear5 = tensor::nn::Linear<T>(hidden_size, 1, 0.1);
-
-    // Forward model
-    auto model = [&linear1, &linear2, &linear3, &linear4, &linear5](auto x) {
-        return linear5(tanh(linear4(tanh(linear3(tanh(linear2(tanh(linear1(x)))))))));
-    };
+    FeedForwardNN<T> model(hidden_size);
 
     // Lambda function to compute MSE loss
     auto mse_loss = [](auto pred, auto target) {
         return mean(pow(pred + (-1.)*target, 2));
     };
 
-    // Adam parameters
+    // Adam init
     T beta1 = 0.9, beta2 = 0.999, eps = 1e-8, weight_decay = 1e-3;
-
-    auto optim = tensor::optim::Adam<T>({
-            {linear1.getParams()[0], true},
-            {linear1.getParams()[1], true},
-            {linear2.getParams()[0], true},
-            {linear2.getParams()[1], true},
-            {linear3.getParams()[0], true},
-            {linear3.getParams()[1], true},
-            {linear4.getParams()[0], true},
-            {linear4.getParams()[1], true},
-            {linear5.getParams()[0], true},
-            {linear5.getParams()[1], true},
-    }, lr, beta1, beta2, eps, weight_decay);
+    auto optim = tensor::optim::Adam<T>(model.getParams(), lr, beta1, beta2, eps, weight_decay);
 
     // File where to store the history of the training
     std::ofstream history("history.csv");
@@ -155,7 +192,6 @@ int main(int argc, char* argv[]) {
         pde_loss->metadata.name = "pde_loss";
         
         // Boundary loss
-        
         auto perm_bound = tensor::random_perm(N_boundaries); // Permuting the rows of the train dataset
         x_boundaries->permute_rows(perm_bound);
         boundary_target->permute_rows(perm_bound);

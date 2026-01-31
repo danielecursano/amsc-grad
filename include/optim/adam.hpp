@@ -57,6 +57,22 @@ namespace tensor::optim {
     template<Numeric T>
     class Adam : public Optimizer<T> {
     public:
+
+        Adam(const std::vector<TensorS<T>>& tensors,
+            T learning_rate, T beta1, T beta2, T eps, T weight_decay)
+            : lr(learning_rate),
+            beta1(beta1),
+            beta2(beta2),
+            eps(eps),
+            weight_decay(weight_decay),
+            step_count(0)
+        {
+            params.reserve(tensors.size());
+            for (const auto& t : tensors) {
+                params.emplace_back(t, true); 
+            }
+        }
+
         Adam(const std::vector<AdamVariable<T>> &params, T learning_rate, T beta1, T beta2, T eps, T weight_decay)
                 : params(params), lr(learning_rate), beta1(beta1), beta2(beta2), eps(eps), weight_decay(weight_decay),
                   step_count(0) {}

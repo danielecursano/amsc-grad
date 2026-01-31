@@ -10,5 +10,6 @@
 #include "optim/optim.hpp"
 #include "optim/adam.hpp"
 #include "nn/layers.hpp"
+#include "nn/model.hpp"
 
 #endif

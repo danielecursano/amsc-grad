@@ -9,14 +9,31 @@
 
 namespace tensor::nn {
 
+/**
+ * @brief Abstract class for neural network layers.
+ */
 template <Numeric T>
 class Layer {
     public:
+
         virtual ~Layer() = default;
+        
+        /**
+         * @brief Returns the trainable parameters of the layer.
+         */
         virtual std::vector<TensorS<T>> getParams() const = 0;
+
+        /**
+         * @brief Forward pass
+         */
         virtual TensorS<T> operator()(const TensorS<T>) const = 0;
 };
 
+/**
+ * @brief Fully connected dense linear layer.
+ * 
+ * Computes y = xW + b, where W is the weight matrix and b is the bias vector.
+ */
 template <Numeric T>
 class Linear: public Layer<T> {
 
